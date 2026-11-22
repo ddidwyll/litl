@@ -1,0 +1,18 @@
+# api_key: "sk-or-..."
+auth_token: "xxx"
+
+actions:
+  translate:
+    system_prompt: "Translate the following text to English. Keep the original meaning and tone."
+    context_file: "translation_style.txt"
+    model: "openai/gpt-4"
+    temperature: 0.3
+  summarize:
+    system_prompt: "Summarize the following text in 3-5 bullet points."
+    model: "anthropic/claude-3.5-sonnet"
+    max_tokens: 500
+  correct:
+    system_prompt: "Correct grammar and improve style while keeping the original meaning."
+    context_file: "style_guide.txt"
+    model: "openai/gpt-4"
+    temperature: 0.2
