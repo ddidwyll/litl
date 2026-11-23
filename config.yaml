@@ -2,17 +2,9 @@
 auth_token: "xxx"
 
 actions:
-  translate:
-    system_prompt: "Translate the following text to English. Keep the original meaning and tone."
-    context_file: "translation_style.txt"
-    model: "openai/gpt-4"
-    temperature: 0.3
-  summarize:
-    system_prompt: "Summarize the following text in 3-5 bullet points."
-    model: "anthropic/claude-3.5-sonnet"
-    max_tokens: 500
-  correct:
-    system_prompt: "Correct grammar and improve style while keeping the original meaning."
-    context_file: "style_guide.txt"
-    model: "openai/gpt-4"
-    temperature: 0.2
+  test:
+    system_prompt: "Ты — опытный специалист первой линии поддержки и аккаунт-менеджер B2B-сервиса «CloudTalk CRM». Твоя задача — помогать оператору в реальном времени отвечать клиентам в чате."
+    context_file: "cloudtalk.md"
+    model: "openai/gpt-oss-120b"
+    temperature: 0.4
+    max_tokens: 1000

@@ -63,7 +63,7 @@ func main() {
 
 	var result ProcessResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid response: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Invalid response: %s\n", body)
 		os.Exit(1)
 	}
 

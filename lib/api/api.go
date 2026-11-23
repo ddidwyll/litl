@@ -26,9 +26,10 @@ type ChatRequest struct {
 	UserMessage  string `json:"-"`
 
 	// Router specific
-	Temperature *float64 `json:"temperature,omitempty"`
-	MaxTokens   *int     `json:"max_tokens,omitempty"`
-	TopP        *float64 `json:"top_p,omitempty"`
+	Temperature     *float64 `json:"temperature,omitempty"`
+	MaxTokens       *int     `json:"max_tokens,omitempty"`
+	TopP            *float64 `json:"top_p,omitempty"`
+	ReasoningEffort *string  `json:"reasoning_effort,omitempty"`
 }
 
 type ChatResponse struct {
@@ -65,15 +66,17 @@ type apiRequest struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
 
-	Temperature *float64 `json:"temperature,omitempty"`
-	MaxTokens   *int     `json:"max_tokens,omitempty"`
-	TopP        *float64 `json:"top_p,omitempty"`
+	Temperature     *float64 `json:"temperature,omitempty"`
+	MaxTokens       *int     `json:"max_tokens,omitempty"`
+	TopP            *float64 `json:"top_p,omitempty"`
+	ReasoningEffort *string  `json:"reasoning_effort"`
+	Stream          bool     `json:"stream,omitempty"`
 }
 
-func NewOpenRouterClient(apiKey string) *RouterClient {
+func NewRouterClient(apiKey string) *RouterClient {
 	return &RouterClient{
 		apiKey:  apiKey,
-		baseURL: "https://openrouter.ai/api/v1",
+		baseURL: "https://api.groq.com/openai/v1",
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -89,7 +92,7 @@ func (c *RouterClient) Chat(ctx context.Context, req ChatRequest) (string, error
 	if req.SystemPrompt != "" || req.Context != "" {
 		systemContent := req.SystemPrompt
 		if req.Context != "" {
-			systemContent += "\n\nContext:\n" + req.Context
+			systemContent += "\n\nКонтекст:\n" + req.Context
 		}
 		messages = append(messages, Message{
 			Role:    "system",
@@ -98,17 +101,21 @@ func (c *RouterClient) Chat(ctx context.Context, req ChatRequest) (string, error
 	}
 
 	// User message
+
+	userMessage := "Сформируй следующий ответ менеджера на основе этой переписки (возможно тут будет только первое сообщение клиента):\n\n"
 	messages = append(messages, Message{
 		Role:    "user",
-		Content: req.UserMessage,
+		Content: userMessage + req.UserMessage,
 	})
 
 	apiReq := apiRequest{
-		Model:       req.Model,
-		Messages:    messages,
-		Temperature: req.Temperature,
-		MaxTokens:   req.MaxTokens,
-		TopP:        req.TopP,
+		Model:           req.Model,
+		Messages:        messages,
+		Temperature:     req.Temperature,
+		MaxTokens:       req.MaxTokens,
+		TopP:            req.TopP,
+		ReasoningEffort: req.ReasoningEffort,
+		Stream:          false,
 	}
 
 	// Retry логика
@@ -188,12 +195,13 @@ func (c *RouterClient) doRequest(ctx context.Context, req apiRequest) (string, e
 
 	// Проверяем HTTP статус
 	if resp.StatusCode != http.StatusOK {
-		// Пытаемся распарсить ошибку
+		// Пытаемся распарсить ошибку от OpenRouter
 		var errResp ChatResponse
 		if json.Unmarshal(body, &errResp) == nil && errResp.Error != nil {
-			return "", fmt.Errorf("API error (status %d): %s (code: %s)",
-				resp.StatusCode, errResp.Error.Message, errResp.Error.Code)
+			// ВАЖНО: используем %w, чтобы завернуть *APIError, а не %s!
+			return "", fmt.Errorf("API error (status %d): %w", resp.StatusCode, errResp.Error)
 		}
+		// Если не удалось распарсить как JSON, возвращаем как есть
 		return "", fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -226,4 +234,8 @@ func (c *RouterClient) doRequest(ctx context.Context, req apiRequest) (string, e
 func (c *RouterClient) StreamChat(ctx context.Context, req ChatRequest, callback func(string)) error {
 	// TODO: реализовать streaming если нужно
 	return errors.New("streaming not implemented")
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API error: %s (code: %s)", e.Message, e.Code)
 }

@@ -15,11 +15,13 @@ type Config struct {
 }
 
 type Action struct {
-	SystemPrompt string   `yaml:"system_prompt"`
-	ContextFile  string   `yaml:"context_file"`
-	Model        string   `yaml:"model"`
-	Temperature  *float64 `yaml:"temperature,omitempty"`
-	MaxTokens    *int     `yaml:"max_tokens,omitempty"`
+	SystemPrompt    string   `yaml:"system_prompt"`
+	ContextFile     string   `yaml:"context_file"`
+	Model           string   `yaml:"model"`
+	Temperature     *float64 `yaml:"temperature,omitempty"`
+	MaxTokens       *int     `yaml:"max_tokens,omitempty"`
+	TopP            *float64 `yaml:"top_p,omitempty"`
+	ReasoningEffort *float64 `yaml:"reasoning_effort,omitempty"`
 }
 
 func Load(path string) (*Config, error) {

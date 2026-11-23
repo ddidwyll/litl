@@ -19,7 +19,7 @@ type Server struct {
 	cfg      *config.Config
 	port     int
 	httpSrv  *http.Server
-	client   *api.OpenRouterClient
+	client   *api.RouterClient
 	clip     clipboard.Clipboard
 	notifier notifier.Notifier
 }
@@ -28,7 +28,7 @@ func New(cfg *config.Config, port int) *Server {
 	s := &Server{
 		cfg:      cfg,
 		port:     port,
-		client:   api.NewOpenRouterClient(cfg.APIKey),
+		client:   api.NewRouterClient(cfg.APIKey),
 		clip:     clipboard.New(),
 		notifier: notifier.New(),
 	}
@@ -131,12 +131,14 @@ func (s *Server) handleProcess(w http.ResponseWriter, r *http.Request) {
 
 	// Вызов API с контекстом для отмены
 	result, err := s.client.Chat(r.Context(), api.ChatRequest{
-		Model:        actionCfg.Model,
-		SystemPrompt: actionCfg.SystemPrompt,
-		Context:      contextText,
-		UserMessage:  text,
-		Temperature:  actionCfg.Temperature,
-		MaxTokens:    actionCfg.MaxTokens,
+		Model:           actionCfg.Model,
+		SystemPrompt:    actionCfg.SystemPrompt,
+		Context:         contextText,
+		UserMessage:     text,
+		Temperature:     actionCfg.Temperature,
+		MaxTokens:       actionCfg.MaxTokens,
+		TopP:            actionCfg.TopP,
+		ReasoningEffort: actionCfg.ReasoningEffort,
 	})
 	if err != nil {
 		s.sendError(w, "API error: "+err.Error())
